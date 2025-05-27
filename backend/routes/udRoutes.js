@@ -14,7 +14,7 @@ async function recordExists(table, id) {
 
 const tables = [
   "merchants",
-  "customers",
+  "employee",
   "otps",
   "pins",
   "transactions",

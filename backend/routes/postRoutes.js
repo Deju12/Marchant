@@ -23,8 +23,8 @@ router.post("/merchants", async (req, res) => {
   }
 });
 
-// 2. Add Customer
-router.post("/customers", async (req, res) => {
+// 2. Add employee
+router.post("/employee", async (req, res) => {
   const { merchant_id, phone_number, is_active } = req.body;
 
   if (!merchant_id || !phone_number) {
@@ -33,10 +33,10 @@ router.post("/customers", async (req, res) => {
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO customers (merchant_id, phone_number, is_active) VALUES (?, ?, ?)`,
+      `INSERT INTO employee (merchant_id, phone_number, is_active) VALUES (?, ?, ?)`,
       [merchant_id, phone_number, is_active ?? true]
     );
-    res.status(201).json({ message: "Customer created", customerId: result.insertId });
+    res.status(201).json({ message: "employee created", customerId: result.insertId });
   } catch (err) {
     res.status(500).json({ message: "Error creating customer", error: err });
   }
@@ -44,16 +44,16 @@ router.post("/customers", async (req, res) => {
 
 // 3. Add OTP
 router.post("/otps", async (req, res) => {
-  const { customer_id, otp_code, otp_type, expires_at } = req.body;
+  const { marchant_id, otp_code, otp_type, expires_at } = req.body;
 
-  if (!customer_id || !otp_code || !otp_type || !expires_at) {
+  if (!marchant_id || !otp_code || !otp_type || !expires_at) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO otps (customer_id, otp_code, otp_type, expires_at) VALUES (?, ?, ?, ?)`,
-      [customer_id, otp_code, otp_type, expires_at]
+      `INSERT INTO otps (marchant_id, otp_code, otp_type, expires_at) VALUES (?, ?, ?, ?)`,
+      [merchant_id, otp_code, otp_type, expires_at]
     );
     res.status(201).json({ message: "OTP created", otpId: result.insertId });
   } catch (err) {
@@ -63,10 +63,10 @@ router.post("/otps", async (req, res) => {
 
 // 4. Add PIN
 router.post("/pins", async (req, res) => {
-  const { customer_id, pin_code } = req.body;
+  const { employee_id, pin_code } = req.body;
 
-  if (!customer_id || !pin_code) {
-    return res.status(400).json({ message: "Customer ID and PIN code are required." });
+  if (!employee_id || !pin_code) {
+    return res.status(400).json({ message: "employee ID and PIN code are required." });
   }
 
   try {
@@ -74,8 +74,8 @@ router.post("/pins", async (req, res) => {
     const hashedPin = await bcrypt.hash(pin_code, SALT_ROUNDS);
 
     const [result] = await sql.execute(
-      `INSERT INTO pins (customer_id, pin_hash) VALUES (?, ?)`,
-      [customer_id, hashedPin]
+      `INSERT INTO pins (employee_id, pin_hash) VALUES (?, ?)`,
+      [employee_id, hashedPin]
     );
 
     res.status(201).json({ message: "PIN created securely", pinId: result.insertId });
@@ -105,16 +105,16 @@ router.post("/transactions", async (req, res) => {
 
 // 6. Add Device Session
 router.post("/device_sessions", async (req, res) => {
-  const { customer_id, device_info, is_logged_in } = req.body;
+  const { employee_id, device_info, is_logged_in } = req.body;
 
-  if (!customer_id || !device_info) {
-    return res.status(400).json({ message: "Customer ID and device info required." });
+  if (!employee_id || !device_info) {
+    return res.status(400).json({ message: "employee ID and device info required." });
   }
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO device_sessions (customer_id, device_info, is_logged_in) VALUES (?, ?, ?)`,
-      [customer_id, device_info, is_logged_in ?? true]
+      `INSERT INTO device_sessions (employee_id, device_info, is_logged_in) VALUES (?, ?, ?)`,
+      [employee_id, device_info, is_logged_in ?? true]
     );
     res.status(201).json({ message: "Device session added", sessionId: result.insertId });
   } catch (err) {
@@ -124,16 +124,16 @@ router.post("/device_sessions", async (req, res) => {
 
 // 7. Add PIN Change Log
 router.post("/pin_change_logs", async (req, res) => {
-  const { customer_id } = req.body;
+  const { employee_id } = req.body;
 
-  if (!customer_id) {
-    return res.status(400).json({ message: "Customer ID required." });
+  if (!employee_id) {
+    return res.status(400).json({ message: "employee ID required." });
   }
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO pin_change_logs (customer_id) VALUES (?)`,
-      [customer_id]
+      `INSERT INTO pin_change_logs (employee_id) VALUES (?)`,
+      [employee_id]
     );
     res.status(201).json({ message: "PIN change logged", logId: result.insertId });
   } catch (err) {
@@ -143,16 +143,16 @@ router.post("/pin_change_logs", async (req, res) => {
 
 // 8. Add Deactivation Request
 router.post("/deactivation_requests", async (req, res) => {
-  const { customer_id, otp_sent, confirmed, completed_at } = req.body;
+  const { employee_id, otp_sent, confirmed, completed_at } = req.body;
 
-  if (!customer_id) {
-    return res.status(400).json({ message: "Customer ID required." });
+  if (!employee_id) {
+    return res.status(400).json({ message: "employee ID required." });
   }
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO deactivation_requests (customer_id, otp_sent, confirmed, completed_at) VALUES (?, ?, ?, ?)`,
-      [customer_id, otp_sent ?? false, confirmed ?? false, completed_at || null]
+      `INSERT INTO deactivation_requests (employee_id, otp_sent, confirmed, completed_at) VALUES (?, ?, ?, ?)`,
+      [employee_id, otp_sent ?? false, confirmed ?? false, completed_at || null]
     );
     res.status(201).json({ message: "Deactivation request created", requestId: result.insertId });
   } catch (err) {
@@ -172,7 +172,7 @@ router.post("/workers", async (req, res) => {
       `INSERT INTO workers (merchant_id, phone_number, is_active) VALUES (?, ?, ?)`,
       [merchant_id, phone_number, is_active ?? true]
     );
-    res.status(201).json({ message: "Worker created", customerId: result.insertId });
+    res.status(201).json({ message: "Worker created", employeeId: result.insertId });
   } catch (err) {
     res.status(500).json({ message: "Error creating worker", error: err });
   }
