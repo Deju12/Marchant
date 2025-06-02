@@ -9,11 +9,13 @@ import authRoutes from "./routes/authRoutes.js";
 import requestOtpRoutes from "./routes/request_otp.js";
 import verifyOtpRoutes from "./routes/verify_otp.js";
 import otp from "./routes/otp.js"
+import cors from 'cors';
 
 dotenv.config();
 
 
 const app = express();
+app.use(cors()); 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());

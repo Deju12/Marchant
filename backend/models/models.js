@@ -38,6 +38,7 @@ export async function createTables(db) {
   FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
 );
   `);
+  
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS pins (

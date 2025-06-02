@@ -13,13 +13,13 @@ router.get("/merchants", async (req, res) => {
   }
 });
 
-// 2. Get all customers
-router.get("/customers", async (req, res) => {
+// 2. Get all employee
+router.get("/employee", async (req, res) => {
   try {
-    const [rows] = await sql.execute("SELECT * FROM customers");
+    const [rows] = await sql.execute("SELECT * FROM employee");
     res.status(200).json(rows);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching customers", error: err });
+    res.status(500).json({ message: "Error fetching employees", error: err });
   }
 });
 

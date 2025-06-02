@@ -38,7 +38,7 @@ router.post("/employee", async (req, res) => {
     );
     res.status(201).json({ message: "employee created", customerId: result.insertId });
   } catch (err) {
-    res.status(500).json({ message: "Error creating customer", error: err });
+    res.status(500).json({ message: "already registered", error: err });
   }
 });
 
