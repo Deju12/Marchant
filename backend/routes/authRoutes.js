@@ -6,7 +6,7 @@ import { sql } from "../config/db.js";
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
-// POST /api/auth/customer-login
+// POST /api/auth/employee-login
 router.post("/", async (req, res) => {
   const { phone_number, pin_code } = req.body;
 
@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
     );
 
     if (employee.length === 0) {
-      return res.status(404).json({ message: "Customer not found" });
+      return res.status(404).json({ message: "Employee not found" });
     }
 
     const customer = employee[0];
