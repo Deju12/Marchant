@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, Image } from "react-native";
-import { Link } from "expo-router";
+import { Text, View, TextInput, TouchableOpacity, Image, Alert } from "react-native";
+import { Link, useRouter } from "expo-router";
 
 export default function Login() {
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -12,9 +13,25 @@ export default function Login() {
     setForm({ ...form, [key]: value });
   };
 
-  const handleLogin = () => {
-    // Login logic here
-    alert("Logged in!");
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone_number: form.username,
+          pin_code: form.password,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        router.replace("/home");
+      } else {
+        Alert.alert("Login Failed", data.message || "Invalid credentials");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not connect to server");
+    }
   };
 
   return (
