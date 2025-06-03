@@ -9,6 +9,8 @@ import authRoutes from "./routes/authRoutes.js";
 import requestOtpRoutes from "./routes/request_otp.js";
 import verifyOtpRoutes from "./routes/verify_otp.js";
 import otp from "./routes/otp.js"
+import pinset from "./routes/pinset.js";
+import loginRoutes from "./routes/loginRoutes.js";
 import cors from 'cors';
 
 dotenv.config();
@@ -37,6 +39,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api", requestOtpRoutes);
 app.use("/api", verifyOtpRoutes);
 app.use("/api", otp);
+app.use("/api", pinset);
+app.use("/api", loginRoutes);
 
 initDB().then(()=>{
     app.listen(PORT, () => {

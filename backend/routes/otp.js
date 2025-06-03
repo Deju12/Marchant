@@ -9,7 +9,9 @@ const router = express.Router();
  */
 router.post("/req_otp", async (req, res) => {
   const { merchant_id, phone_number } = req.body;
-
+  await sql.execute(
+  `DELETE FROM otps WHERE is_used = 1`
+);
   if (!merchant_id || !phone_number) {
     return res.status(400).json({ message: "merchant_id and phone_number are required" });
   }
@@ -20,14 +22,14 @@ router.post("/req_otp", async (req, res) => {
       `SELECT phone_number FROM merchants WHERE id = ?`,
       [merchant_id]
     );
-
+    
     if (merchantRows.length === 0) {
       return res.status(404).json({ message: "Merchant not found" });
     }
 
     // Generate OTP
     const otp_code = crypto.randomInt(100000, 999999).toString();
-    const expires_at = new Date(Date.now() + 5 * 60000); // expires in 5 minutes
+    const expires_at = new Date(Date.now() + 3 * 60000); // expires in 3 minutes
 
     // Insert OTP with merchant_id and phone_number
     await sql.execute(
@@ -98,11 +100,12 @@ router.post("/ver_otp", async (req, res) => {
       `INSERT INTO employee (merchant_id, phone_number) VALUES (?, ?)`,
       [merchant_id, phone_number]
     );
-
+    
     await sql.execute(
   `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
   [otp_code]
 );
+
     res.status(201).json({
       message: "OTP verified and employee registered",
       employee_id: insertResult.insertId,

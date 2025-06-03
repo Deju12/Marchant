@@ -4,8 +4,9 @@ import { Text, View, TextInput, TouchableOpacity, Image } from "react-native";
 
 export default function Index() {
   const [form, setForm] = useState({
-    customerId: "",
     phone: "",
+    pincode: "",
+    repincode:"",
   });
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -21,42 +22,52 @@ export default function Index() {
     setErrorMsg("");
 
     // Front-end validation
-    if (!form.customerId.trim()) {
-      setErrorMsg("Customer ID is required.");
-      return;
-    }
-
     if (!form.phone.trim()) {
       setErrorMsg("Phone Number is required.");
       return;
     }
 
+    if (!form.pincode.trim()) {
+      setErrorMsg("PIN is required.");
+      return;
+    }
+     if (!form.repincode.trim()) {
+      setErrorMsg("PIN Comfirmation is required.");
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:4000/api/req_otp", {
+      const response = await fetch("http://localhost:4000/api/pinset/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          merchant_id: form.customerId,
           phone_number: form.phone,
+          pin_code: form.pincode,
+          repin_code: form.repincode,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMsg("Registered successfully!");
-        setForm({ customerId: "", phone: "" }); // clear form
+        setSuccessMsg("PIN Created successfully!");
+        setForm({ phone: "", pincode: "",repincode:"" }); // clear form
         setTimeout(() => {
           setSuccessMsg("");
-          router.replace("/otp"); // Redirect to OTP Activation after success
+          router.replace("/"); // Redirect to OTP Activation after success
         }, 1000);
       } else if (
         data.message &&
-        (data.message.includes("already registered") || data.message.includes("Failed to send OTP") || data.message.includes("Error creating customer"))
+        (data.message.includes("PIN already set for this employee.") || data.message.includes("Error creating customer"))
       ) {
         setErrorMsg("This phone number is already registered.");
+      }else if (
+        data.message &&
+        (data.message.includes("Phone number not registered."))
+      ) {
+        setErrorMsg("Phone number not registered.");
       } else {
         setErrorMsg(data.message || "Registration failed.");
       }
@@ -75,7 +86,7 @@ export default function Index() {
         className="w-24 h-24 mb-12"
         resizeMode="contain"
       />
-      <Text className="text-2xl font-bold text-green mb-6">Register</Text>
+      <Text className="text-2xl font-bold text-green mb-6">Set Your PIN</Text>
 
       {/* Success message */}
       {successMsg ? (
@@ -93,25 +104,31 @@ export default function Index() {
 
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
-        placeholder="Customer ID"
-        value={form.customerId}
-        onChangeText={(text) => handleChange("customerId", text)}
+        placeholder="phone Number"
+        value={form.phone}
+        onChangeText={(text) => handleChange("phone", text)}
       />
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
-        placeholder="Phone Number"
-        value={form.phone}
-        onChangeText={(text) => handleChange("phone", text)}
+        placeholder="Enter PIN"
+        value={form.pincode}
+        onChangeText={(text) => handleChange("pincode", text)}
+      />
+      <TextInput
+        className="border border-green rounded w-72 p-3 mb-4 bg-white"
+        placeholder="Confirm PIN"
+        value={form.repincode}
+        onChangeText={(text) => handleChange("repincode", text)}
       />
       <TouchableOpacity
         className="bg-green w-72 py-3 rounded mb-4"
         onPress={handleRegister}
       >
-        <Text className="text-center text-white font-bold">Register</Text>
+        <Text className="text-center text-white font-bold">Complate</Text>
       </TouchableOpacity>
-      <Text className="mb-2 text-gray-700">You have an account?</Text>
-      <Link href="/" className="text-green font-bold">
-        Login here
+      
+      <Link href="/otp" className="text-green font-bold">
+        Back
       </Link>
     </View>
   );
