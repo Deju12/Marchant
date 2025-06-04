@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Transaction = {
   id?: number | string;
@@ -16,13 +17,22 @@ export default function TransactionScreen() {
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList<Transaction>>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [merchantId, setMerchantId] = useState<string | null>(null);
 
   // ✅ Replace this with your actual backend URL
   const API_URL = 'http://localhost:4000/api/transactions/';
 
-  const loadTransactions = async () => {
+  useEffect(() => {
+    // Get merchant ID on mount
+    AsyncStorage.getItem('merchant_id').then(id => {
+      setMerchantId(id);
+      if (id) loadTransactions(id);
+    });
+  }, []);
+
+  const loadTransactions = async (id: string) => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(`http://localhost:4000/api/transactions?merchant_id=${id}`);
       const data = await response.json();
       setTransactions(data);
     } catch (error) {
@@ -38,19 +48,20 @@ export default function TransactionScreen() {
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ offset: 0, animated: true });
     }
-    await loadTransactions();
+    if (merchantId) await loadTransactions(merchantId);
     setRefreshing(false);
   };
 
   // ⏱️ Auto-refresh every 2 seconds
   useEffect(() => {
-    loadTransactions(); // initial fetch
+    if (!merchantId) return;
+    loadTransactions(merchantId); // initial fetch
     const interval = setInterval(() => {
-      loadTransactions();
+      loadTransactions(merchantId);
     }, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [merchantId]);
 
   const renderItem = ({ item }) => (
     <View className="border border-green p-3 mb-3 rounded">

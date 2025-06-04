@@ -17,12 +17,17 @@ router.post("/login", async (req, res) => {
       "SELECT id FROM employee WHERE phone_number = ?",
       [phone_number]
     );
+    const [emp] = await sql.execute(
+      "SELECT merchant_id FROM employee WHERE phone_number = ?",
+      [phone_number]
+    );
 
     if (employees.length === 0) {
       return res.status(401).json({ message: "Invalid phone number or PIN." });
     }
 
     const employee_id = employees[0].id;
+    const merchant_id = emp[0].merchant_id;
 
     // 2. Get hashed pin from pins table
     const [pins] = await sql.execute(
@@ -44,7 +49,8 @@ router.post("/login", async (req, res) => {
     }
 
     // 4. Success (you can add JWT or session here)
-    res.status(200).json({ message: "Login successful", employee_id });
+    res.status(200).json({ message: "Login successful", employee_id , merchant_id });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed", error: err.message });
