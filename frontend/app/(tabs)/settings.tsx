@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Alert, Modal, Image } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
@@ -25,8 +25,12 @@ export default function SettingsScreen() {
 
   return (
     <View className="flex-1 justify-center items-center bg-white">
-      <Text className="text-2xl font-bold mb-8 text-green-700">Settings</Text>
       <View className="w-80 space-y-4">
+         <Image
+                source={require("../../assets/images/tslogo.webp")}
+                className="w-24 h-24 mb-12"
+                resizeMode="contain"
+              />
         <TouchableOpacity
           className="bg-red-100 border rounded-xl py-1 mb-2 shadow"
           onPress={() => setModalVisible("deactivate")}
@@ -36,7 +40,7 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-yellow-100 border border-yellow-400 rounded-xl py-4 mb-2 shadow"
+          className="bg-yellow-100 border rounded-xl py-1 mb-2 shadow"
           onPress={() => setModalVisible("pin")}
         >
           <Text className="text-yellow-700 font-bold text-center text-lg">
@@ -44,7 +48,7 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-gray-100 border border-gray-400 rounded-xl py-4 shadow"
+          className="bg-gray-100 border rounded-xl py-1 mb-2 shadow"
           onPress={() => setModalVisible("logout")}
         >
           <Text className="text-gray-700 font-bold text-center text-lg">
