@@ -26,7 +26,7 @@ export async function createTables(db) {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS otps (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  phone_number VARCHAR(20) NOT NULL UNIQUE,
+  phone_number VARCHAR(20) NOT NULL,
   merchant_id INT NULL,
   employee_id INT NULL,
   otp_code VARCHAR(10) NOT NULL,

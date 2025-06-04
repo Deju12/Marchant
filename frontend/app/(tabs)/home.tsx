@@ -19,8 +19,6 @@ export default function TransactionScreen() {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [merchantId, setMerchantId] = useState<string | null>(null);
 
-  // ✅ Replace this with your actual backend URL
-  const API_URL = 'http://localhost:4000/api/transactions/';
 
   useEffect(() => {
     // Get merchant ID on mount
@@ -99,13 +97,6 @@ export default function TransactionScreen() {
 
   return (
     <View className="flex-1 bg-white p-4">
-      <Image
-             source={require("../assets/images/tslogo.webp")}
-             className="w-24 h-12 mb-12"
-             resizeMode="contain"
-        />
-      
-
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-2xl font-bold text-green">Transactions</Text>
         <TouchableOpacity onPress={onRefresh} accessibilityLabel="Refresh">

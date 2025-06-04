@@ -1,18 +1,29 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 
 export default function Index() {
   const [form, setForm] = useState({
     customerId: "",
     phone: "",
   });
-
+  const [countryCode, setCountryCode] = useState("+251");
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (key: string, value: string) => {
     setForm({ ...form, [key]: value });
+  };
+
+  // Only allow 9 digits for phone
+  const handlePhoneChange = (text: string) => {
+    // Remove non-digit characters
+    const digits = text.replace(/\D/g, "");
+    // Limit to 9 digits
+    if (digits.length <= 9) {
+      setForm({ ...form, phone: digits });
+    }
   };
 
   const handleRegister = async () => {
@@ -32,6 +43,7 @@ export default function Index() {
     }
 
     try {
+      const fullPhone = countryCode + form.phone;
       const response = await fetch("http://localhost:4000/api/req_otp", {
         method: "POST",
         headers: {
@@ -39,7 +51,7 @@ export default function Index() {
         },
         body: JSON.stringify({
           merchant_id: form.customerId,
-          phone_number: form.phone,
+          phone_number: fullPhone,
         }),
       });
 
@@ -50,7 +62,13 @@ export default function Index() {
         setForm({ customerId: "", phone: "" }); // clear form
         setTimeout(() => {
           setSuccessMsg("");
-          router.replace("/otp"); // Redirect to OTP Activation after success
+          router.replace({
+            pathname: "/otp",
+            params: {
+              merchantId: form.customerId,
+              phone: countryCode + form.phone,
+            },
+          }); // Redirect to OTP Activation after success
         }, 1000);
       } else if (
         data.message &&
@@ -94,22 +112,39 @@ export default function Index() {
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
         placeholder="Customer ID"
+        placeholderTextColor="rgba(0,0,0,0.4)"
         value={form.customerId}
         onChangeText={(text) => handleChange("customerId", text)}
       />
-      <TextInput
-        className="border border-green rounded w-72 p-3 mb-4 bg-white"
-        placeholder="Phone Number"
-        value={form.phone}
-        onChangeText={(text) => handleChange("phone", text)}
-      />
+
+      {/* Phone number with country code picker */}
+      <View className="flex-row items-center mb-4">
+        <Picker
+          selectedValue={countryCode}
+          style={{ height: 40, width: 100 }}
+          onValueChange={(itemValue) => setCountryCode(itemValue)}
+        >
+          <Picker.Item label="+251 (ET)" value="+251" />
+          {/* Add more countries as needed */}
+        </Picker>
+        <TextInput
+          className="border border-green rounded p-3 bg-white flex-1 ml-2"
+          placeholder="911000000"
+          placeholderTextColor="rgba(0,0,0,0.4)"
+          keyboardType="number-pad"
+          maxLength={9}
+          value={form.phone}
+          onChangeText={handlePhoneChange}
+        />
+      </View>
+
       <TouchableOpacity
         className="bg-green w-72 py-3 rounded mb-4"
         onPress={handleRegister}
       >
         <Text className="text-center text-white font-bold">Register</Text>
       </TouchableOpacity>
-      <Text className="mb-2 text-gray-700">You have an account?</Text>
+      <Text className="mb-2 text-gray-700">Do you have an account?</Text>
       <Link href="/" className="text-green font-bold">
         Login here
       </Link>
