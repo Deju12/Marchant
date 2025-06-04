@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image, Alert } from "react-native";
 import { Link, useRouter } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
   const router = useRouter();
   const [form, setForm] = useState({
-    username: "",
-    password: "",
+    phone: "",
+    pin: "",
   });
 
   const handleChange = (key: string, value: string) => {
@@ -19,12 +20,14 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone_number: form.username,
-          pin_code: form.password,
+          phone_number: form.phone,
+          pin_code: form.pin,
         }),
       });
       const data = await response.json();
       if (response.ok) {
+        // Save merchant/employee id
+        await AsyncStorage.setItem('merchant_id', data.merchant_id.toString());
         router.replace("/home");
       } else {
         Alert.alert("Login Failed", data.message || "Invalid credentials");
@@ -45,15 +48,15 @@ export default function Login() {
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
         placeholder="Phone Number"
-        value={form.username}
+        value={form.phone}
         onChangeText={(text) => handleChange("phone", text)}
       />
       <TextInput
         className="border border-green rounded w-72 p-3 mb-6 bg-white"
-        placeholder="Password"
+        placeholder="PIN Code"
         secureTextEntry
-        value={form.password}
-        onChangeText={(text) => handleChange("password", text)}
+        value={form.pin}
+        onChangeText={(text) => handleChange("pin", text)}
       />
       <TouchableOpacity
         className="bg-green w-72 py-3 rounded mb-4"

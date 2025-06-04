@@ -45,8 +45,15 @@ router.get("/pins", async (req, res) => {
 
 // 5. Get all transactions
 router.get("/transactions", async (req, res) => {
+  const { merchant_id } = req.query;
+  if (!merchant_id) {
+    return res.status(400).json({ message: "merchant_id is required" });
+  }
   try {
-    const [rows] = await sql.execute("SELECT * FROM transactions");
+    const [rows] = await sql.execute(
+      "SELECT * FROM transactions WHERE merchant_id = ? ORDER BY transaction_date DESC",
+      [merchant_id]
+    );
     res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ message: "Error fetching transactions", error: err });
