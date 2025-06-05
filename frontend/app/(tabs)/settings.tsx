@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert, Modal, Image } from "react-native";
+import { View, Text, TouchableOpacity, Modal, Image } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
@@ -7,9 +7,50 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState<null | "deactivate" | "pin" | "logout">(null);
 
+  // New state for feedback dialog
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"success" | "error">("success");
+
   const handleDeactivate = async () => {
     setModalVisible(null);
-    Alert.alert("Deactivation", "Deactivation request sent.");
+   const phone_number = await AsyncStorage.getItem("phone_number");
+    const merchant_id = await AsyncStorage.getItem("merchant_id");
+    
+
+    if (!merchant_id || !phone_number) {
+      setFeedbackType("error");
+      setFeedbackMessage("Merchant info not found.");
+      setFeedbackVisible(true);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:4000/api/req_de_otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ merchant_id, phone_number }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setFeedbackType("success");
+        setFeedbackMessage(`OTP sent to merchant. Please check marchant phone.`);
+        setFeedbackVisible(true);
+        // Redirect after short delay
+        setTimeout(() => {
+          setFeedbackVisible(false);
+          router.push("/de_otp");
+        }, 1200);
+      } else {
+        setFeedbackType("error");
+        setFeedbackMessage(data.message || "Failed to send OTP.");
+        setFeedbackVisible(true);
+      }
+    } catch (err) {
+      setFeedbackType("error");
+      setFeedbackMessage("Network error.");
+      setFeedbackVisible(true);
+    }
   };
 
   const handleChangePin = () => {
@@ -56,6 +97,41 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Feedback Modal */}
+      <Modal
+        transparent
+        visible={feedbackVisible}
+        animationType="fade"
+        onRequestClose={() => setFeedbackVisible(false)}
+      >
+        <View className="flex-1 bg-black/25 justify-center items-center">
+          <View className="bg-white rounded-2xl p-7 w-72 items-center shadow-lg">
+            <Text
+              className={`text-lg font-bold mb-4 ${
+                feedbackType === "success" ? "text-green-700" : "text-red-700"
+              }`}
+            >
+              {feedbackType === "success" ? "Success" : "Error"}
+            </Text>
+            <Text className="mb-6 text-center text-gray-700">{feedbackMessage}</Text>
+            <TouchableOpacity
+              className={`rounded-lg py-2 px-6 ${
+                feedbackType === "success" ? "bg-green-100" : "bg-red-100"
+              }`}
+              onPress={() => setFeedbackVisible(false)}
+            >
+              <Text
+                className={`font-bold ${
+                  feedbackType === "success" ? "text-green-700" : "text-red-700"
+                }`}
+              >
+                OK
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Dialog Modal */}
       <Modal

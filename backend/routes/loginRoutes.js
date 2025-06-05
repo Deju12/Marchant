@@ -17,9 +17,9 @@ router.post("/login", async (req, res) => {
   try {
     // Find employee
     const [employees] = await sql.execute(
-      "SELECT id, merchant_id FROM employee WHERE phone_number = ?",
-      [phone_number]
-    );
+  "SELECT id, merchant_id, phone_number FROM employee WHERE phone_number = ?",
+  [phone_number]
+);
 
     if (employees.length === 0) {
       return res.status(404).json({ message: "Employee not found" });
@@ -44,16 +44,17 @@ router.post("/login", async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { employee_id: employee.id, phone_number },
+      { employee_id: employee.id, phone_number: employee.phone_number, merchant_id: employee.merchant_id },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ 
-      message: "Login successful", 
-      employee_id: employee.id, 
-      token, 
-      merchant_id: employee.merchant_id 
+    res.json({
+      message: "Login successful",
+      employee_id: employee.id,
+      phone_number: employee.phone_number, 
+      token,
+      merchant_id: employee.merchant_id
     });
 
   } catch (err) {

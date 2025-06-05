@@ -38,6 +38,21 @@ export async function createTables(db) {
   FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
 );
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS de_otps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  phone_number VARCHAR(20) NOT NULL,
+  merchant_id INT NULL,
+  employee_id INT NULL,
+  otp_code VARCHAR(10) NOT NULL,
+  otp_type ENUM('activation', 'deactivation'),
+  is_used BOOLEAN DEFAULT false,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
+);
+  `);
   
 
   await db.execute(`
