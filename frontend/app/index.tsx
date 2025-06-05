@@ -39,16 +39,11 @@ export default function Login() {
       if (response.ok) {
         setSuccessMsg("Login successful! Redirecting...");
 
-        // Store token and merchant_id
-        if (data.token) {
-          await AsyncStorage.setItem('token', data.token);
-        }
-        if (data.merchant_id) {
-          await AsyncStorage.setItem('merchant_id', data.merchant_id.toString());
-        }
-        if (data.employee_id) {
-          await AsyncStorage.setItem("employee_id", data.employee_id.toString());
-        }
+        // Store token ,merchant_id and employee_id in AsyncStorage
+       await AsyncStorage.setItem("token", data.token);
+       await AsyncStorage.setItem("employee_id", data.employee_id.toString());
+       await AsyncStorage.setItem("merchant_id", data.merchant_id.toString());
+       await AsyncStorage.setItem("phone_number", data.phone_number); // <-- Store phone number here!
 
         setTimeout(() => {
           setSuccessMsg("");

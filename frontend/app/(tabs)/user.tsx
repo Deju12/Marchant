@@ -9,7 +9,8 @@ export default function UserScreen() {
   useEffect(() => {
     const fetchEmployee = async () => {
       const token = await AsyncStorage.getItem("token");
-      const employeeId = await AsyncStorage.getItem("employee_id"); // Make sure you store this after login!
+      const employeeId = await AsyncStorage.getItem("employee_id");
+       // Make sure you store this after login!
       if (!employeeId) {
         setEmployee(null);
         setLoading(false);
@@ -27,6 +28,8 @@ export default function UserScreen() {
         );
         const data = await response.json();
         setEmployee(data);
+        await AsyncStorage.setItem("phone_number", data.phone_number);
+        await AsyncStorage.setItem("employee_id", data.employee_id);
       } catch (error) {
         setEmployee(null);
       }
@@ -54,7 +57,7 @@ export default function UserScreen() {
   return (
     <View className="flex-1 justify-center items-center">
       <Text className="text-2xl font-bold mb-4">User Profile</Text>
-      <Text className="mb-2">ID: {employee.employeeId}</Text>
+      <Text className="mb-2">ID: {employee.employee_id}</Text>
       <Text className="mb-2">Phone: {employee.phone_number}</Text>
       {/* Add more fields as needed */}
     </View>
