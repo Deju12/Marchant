@@ -38,7 +38,18 @@ export default function Login() {
       const data = await response.json();
       if (response.ok) {
         setSuccessMsg("Login successful! Redirecting...");
-        await AsyncStorage.setItem('merchant_id', data.merchant_id.toString());
+
+        // Store token and merchant_id
+        if (data.token) {
+          await AsyncStorage.setItem('token', data.token);
+        }
+        if (data.merchant_id) {
+          await AsyncStorage.setItem('merchant_id', data.merchant_id.toString());
+        }
+        if (data.employee_id) {
+          await AsyncStorage.setItem("employee_id", data.employee_id.toString());
+        }
+
         setTimeout(() => {
           setSuccessMsg("");
           router.replace("/home");

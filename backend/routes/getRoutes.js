@@ -1,10 +1,11 @@
 import express from "express";
 import {sql} from "../config/db.js";
+import { authenticateToken } from "../middlewares/authenticateToken.js";
 
 const router = express.Router();
 
 // 1. Get all merchants
-router.get("/merchants", async (req, res) => {
+router.get("/merchants", authenticateToken, async (req, res) => {
   try {
     const [rows] = await sql.execute("SELECT * FROM merchants");
     res.status(200).json(rows);
@@ -20,6 +21,19 @@ router.get("/employee", async (req, res) => {
     res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ message: "Error fetching employees", error: err });
+  }
+});
+
+router.get("/employee/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await sql.execute("SELECT * FROM employee WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching employee", error: err });
   }
 });
 
@@ -44,7 +58,7 @@ router.get("/pins", async (req, res) => {
 });
 
 // 5. Get all transactions
-router.get("/transactions", async (req, res) => {
+router.get("/transactions", authenticateToken,async (req, res) => {
   const { merchant_id } = req.query;
   if (!merchant_id) {
     return res.status(400).json({ message: "merchant_id is required" });

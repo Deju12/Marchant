@@ -1,59 +1,64 @@
 import express from "express";
-import { sql } from "../config/db.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { sql } from "../config/db.js";
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
+// POST /api/login
 router.post("/login", async (req, res) => {
   const { phone_number, pin_code } = req.body;
 
   if (!phone_number || !pin_code) {
-    return res.status(400).json({ message: "Phone number and PIN code are required." });
+    return res.status(400).json({ message: "Phone number and PIN are required." });
   }
 
   try {
-    // 1. Find employee by phone number
+    // Find employee
     const [employees] = await sql.execute(
-      "SELECT id FROM employee WHERE phone_number = ?",
-      [phone_number]
-    );
-    const [emp] = await sql.execute(
-      "SELECT merchant_id FROM employee WHERE phone_number = ?",
+      "SELECT id, merchant_id FROM employee WHERE phone_number = ?",
       [phone_number]
     );
 
     if (employees.length === 0) {
-      return res.status(401).json({ message: "Invalid phone number or PIN." });
+      return res.status(404).json({ message: "Employee not found" });
     }
 
-    const employee_id = employees[0].id;
-    const merchant_id = emp[0].merchant_id;
+    const employee = employees[0];
 
-    // 2. Get hashed pin from pins table
+    // Get latest PIN
     const [pins] = await sql.execute(
-      "SELECT pin_hash FROM pins WHERE employee_id = ?",
-      [employee_id]
+      "SELECT pin_hash FROM pins WHERE employee_id = ? ORDER BY created_at DESC LIMIT 1",
+      [employee.id]
     );
 
     if (pins.length === 0) {
-      return res.status(401).json({ message: "PIN not set for this user." });
+      return res.status(404).json({ message: "PIN not found for this user" });
     }
 
-    const pin_hash = pins[0].pin_hash;
-
-    // 3. Compare pin_code with hash
-    const match = await bcrypt.compare(pin_code, pin_hash);
-
+    const match = await bcrypt.compare(pin_code, pins[0].pin_hash);
     if (!match) {
-      return res.status(401).json({ message: "Invalid phone number or PIN." });
+      return res.status(401).json({ message: "Invalid PIN" });
     }
 
-    // 4. Success (you can add JWT or session here)
-    res.status(200).json({ message: "Login successful", employee_id , merchant_id });
+    // Generate token
+    const token = jwt.sign(
+      { employee_id: employee.id, phone_number },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ 
+      message: "Login successful", 
+      employee_id: employee.id, 
+      token, 
+      merchant_id: employee.merchant_id 
+    });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Login failed", error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 

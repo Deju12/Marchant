@@ -28,17 +28,33 @@ export default function TransactionScreen() {
     });
   }, []);
 
-  const loadTransactions = async (id: string) => {
+  // Add a parameter to control loading spinner
+  const loadTransactions = async (id: string, showLoading = true) => {
+    if (showLoading) setLoading(true);
+    const token = await AsyncStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:4000/api/transactions?merchant_id=${id}`);
+      const response = await fetch(
+        `http://localhost:4000/api/transactions?merchant_id=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const data = await response.json();
-      setTransactions(data);
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
-    } finally {
-      setLoading(false);
+      setTransactions([]);
     }
+    if (showLoading) setLoading(false);
   };
+
+  // Initial load and manual refresh: show spinner
+  useEffect(() => {
+    if (!merchantId) return;
+    loadTransactions(merchantId, true); // show spinner on first load
+  }, [merchantId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -46,18 +62,16 @@ export default function TransactionScreen() {
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ offset: 0, animated: true });
     }
-    if (merchantId) await loadTransactions(merchantId);
+    if (merchantId) await loadTransactions(merchantId, true); // show spinner on manual refresh
     setRefreshing(false);
   };
 
   // ⏱️ Auto-refresh every 2 seconds
   useEffect(() => {
     if (!merchantId) return;
-    loadTransactions(merchantId); // initial fetch
     const interval = setInterval(() => {
-      loadTransactions(merchantId);
+      loadTransactions(merchantId, false); // no spinner for auto-refresh
     }, 2000);
-
     return () => clearInterval(interval);
   }, [merchantId]);
 
