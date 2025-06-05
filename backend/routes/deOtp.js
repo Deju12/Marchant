@@ -52,7 +52,7 @@ router.post("/req_de_otp", async (req, res) => {
 /**
  * 2. Verify OTP and Register Employee
  */
-router.post("/ver_otp", async (req, res) => {
+router.post("/ver_e_otp", async (req, res) => {
   const { otp_code } = req.body;
 
   if (!otp_code) {
@@ -88,9 +88,9 @@ router.post("/ver_otp", async (req, res) => {
       [merchant_id, phone_number]
     );
 
-    if (existing.length > 0) {
+    if (existing.length == 0) {
       return res.status(200).json({
-        message: "Employee already registered",
+        message: "Employee already Deactivated",
         employee: existing[0],
       });
     }
@@ -113,6 +113,60 @@ router.post("/ver_otp", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "OTP verification failed", error: err.message });
+  }
+});
+
+/**
+ * 3. Deactivate Employee
+ */
+router.post("/ver_de_otp", async (req, res) => {
+  const { otp_code } = req.body;
+
+  if (!otp_code) {
+    return res.status(400).json({ message: "OTP code is required" });
+  }
+
+  try {
+    // Find OTP
+    const [rows] = await sql.execute(
+      `SELECT * FROM de_otps WHERE otp_code = ? ORDER BY created_at DESC LIMIT 1`,
+      [otp_code]
+    );
+
+    const otp = rows[0];
+
+    if (!otp) {
+      return res.status(404).json({ message: "OTP not found" });
+    }
+
+    if (new Date() > new Date(otp.expires_at)) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    const { merchant_id, phone_number } = otp;
+
+    if (!merchant_id || !phone_number) {
+      return res.status(400).json({ message: "Missing merchant_id or phone_number in OTP record" });
+    }
+
+    // Delete the employee with the given merchant_id and phone_number
+    await sql.execute(
+      `DELETE FROM employee WHERE merchant_id = ? AND phone_number = ?`,
+      [merchant_id, phone_number]
+    );
+
+    // Optionally, mark the OTP as used (if you want)
+    await sql.execute(
+      `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
+      [otp_code]
+    );
+
+    res.status(200).json({
+      message: "Employee deactivated (deleted) successfully"
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Employee deactivation failed", error: err.message });
   }
 });
 
