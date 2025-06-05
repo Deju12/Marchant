@@ -1,6 +1,6 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useRef, useState, useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity, Image, Pressable } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Image, Pressable, Modal } from "react-native";
 
 export default function Index() {
   const [otp, setOtp] = useState("");
@@ -8,6 +8,7 @@ export default function Index() {
   const [errorMsg, setErrorMsg] = useState("");
   const [resendTimer, setResendTimer] = useState(180); // 3 minutes
   const [isResending, setIsResending] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const inputRef = useRef<TextInput | null>(null);
 
   const params = useLocalSearchParams();
@@ -35,17 +36,17 @@ export default function Index() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:4000/api/ver_otp", {
+      const response = await fetch("http://localhost:4000/api/ver_de_otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp_code: otp }),
       });
       const data = await response.json();
       if (response.ok) {
-        setSuccessMsg("Registered successfully!");
+        setSuccessMsg("Deactivated successfully!");
         setTimeout(() => {
           setSuccessMsg("");
-          router.replace("/pinset");
+          router.replace("/");
         }, 1000);
       } else if (
         data.message &&
@@ -168,7 +169,7 @@ export default function Index() {
 
       <TouchableOpacity
         className="bg-green w-72 py-3 rounded mb-4"
-        onPress={handleOtp}
+        onPress={() => setConfirmVisible(true)}
       >
         <Text className="text-center text-white font-bold">Activate</Text>
       </TouchableOpacity>
@@ -176,6 +177,42 @@ export default function Index() {
       <Link href="/settings" className="text-green font-bold">
         Back
       </Link>
+
+      {/* Confirmation Modal */}
+      <Modal
+        transparent
+        visible={confirmVisible}
+        animationType="fade"
+        onRequestClose={() => setConfirmVisible(false)}
+      >
+        <View className="flex-1 bg-black/25 justify-center items-center">
+          <View className="bg-white rounded-2xl p-7 w-80 items-center shadow-lg">
+            <Text className="text-lg font-bold mb-4 text-red-700">
+              Confirm Deactivation
+            </Text>
+            <Text className="mb-6 text-center text-gray-700">
+              Are you sure you want to deactivate this account?
+            </Text>
+            <View className="flex-row space-x-4">
+              <TouchableOpacity
+                className="bg-red-100 rounded-lg py-2 px-6 mr-2"
+                onPress={async () => {
+                  setConfirmVisible(false);
+                  await handleOtp();
+                }}
+              >
+                <Text className="text-red-700 font-bold">Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="bg-gray-100 rounded-lg py-2 px-6"
+                onPress={() => setConfirmVisible(false)}
+              >
+                <Text className="text-gray-700 font-bold">No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
