@@ -13,6 +13,18 @@ router.get("/merchants", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching merchants", error: err });
   }
 });
+router.get("/merchants/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await sql.execute("SELECT * FROM merchants WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Merchant not found" });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching merchant", error: err });
+  }
+});
 
 // 2. Get all employee
 router.get("/employee", async (req, res) => {
