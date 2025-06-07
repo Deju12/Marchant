@@ -55,7 +55,7 @@ export default function SettingsScreen() {
 
   const handleChangePin = () => {
     setModalVisible(null);
-    router.push("/pinset");
+    router.push("/change_pin");
   };
 
   const handleLogout = async () => {

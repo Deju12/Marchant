@@ -11,6 +11,7 @@ import verifyOtpRoutes from "./routes/verify_otp.js";
 import otp from "./routes/otp.js"
 import pinset from "./routes/pinset.js";
 import loginRoutes from "./routes/loginRoutes.js";
+import change_pin from "./routes/change_pin.js";
 import deOtp from "./routes/deOtp.js";
 import cors from 'cors';
 
@@ -43,6 +44,7 @@ app.use("/api", otp);
 app.use("/api", pinset);
 app.use("/api", loginRoutes);
 app.use("/api", deOtp);
+app.use("/api", change_pin);
 
 
 initDB().then(()=>{
