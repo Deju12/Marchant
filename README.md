@@ -23,11 +23,11 @@ It supports merchant login, OTP-based deactivation, PIN management, and transact
 
 ![Home Screen](assets/screenshots/home.png)
 
-### Deactivation OTP
+### Register
 
 ![Deactivation OTP](assets/screenshots/register.png)
 
-### Settings
+### OTP
 
 ![Settings Screen](assets/screenshots/otp.png)
 
