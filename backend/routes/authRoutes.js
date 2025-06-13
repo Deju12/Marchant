@@ -25,16 +25,16 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    const customer = employee[0];
+    const employee_id = employee[0];
 
     // 2. Get their PIN hash
     const [pins] = await sql.execute(
       "SELECT pin_hash FROM pins WHERE employee_id = ? ORDER BY created_at DESC LIMIT 1",
-      [customer.id]
+      [employee_id.id]
     );
 
     if (pins.length === 0) {
-      return res.status(404).json({ message: "PIN not found for customer" });
+      return res.status(404).json({ message: "PIN not found for employee" });
     }
 
     const { pin_hash } = pins[0];
@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
     }
 
     // 4. Create token
-    const token = jwt.sign({ employee_id: customer.id, phone_number }, JWT_SECRET, {
+    const token = jwt.sign({ employee_id: employee_id.id, phone_number }, JWT_SECRET, {
       expiresIn: "1h",
     });
 

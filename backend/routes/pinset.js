@@ -5,10 +5,10 @@ const router = express.Router();
 
 
 router.post("/pinset", async (req, res) => {
-  const { phone_number, pin_code, repin_code } = req.body;
+  const { phone_number, pin_code, repin_code, name, merchant_id } = req.body;
 
-  if (!phone_number || !pin_code || !repin_code) {
-    return res.status(400).json({ message: "Phone number, PIN code, and RePIN are required." });
+  if (!phone_number || !pin_code || !repin_code || !name || !merchant_id) {
+    return res.status(400).json({ message: "Phone number, name, merchant ID, PIN code, and RePIN are required." });
   }
   if (pin_code !== repin_code) {
     return res.status(400).json({ message: "PIN codes do not match." });
@@ -20,11 +20,17 @@ router.post("/pinset", async (req, res) => {
       [phone_number]
     );
 
+    let employee_id;
     if (employees.length === 0) {
-      return res.status(404).json({ message: "Phone number not registered." });
+      // Employee does not exist, insert new employee
+      const [insertResult] = await sql.execute(
+        `INSERT INTO employee (merchant_id, phone_number, name, is_active) VALUES (?, ?, ?, ?)`,
+        [merchant_id, phone_number, name, true]
+      );
+      employee_id = insertResult.insertId;
+    } else {
+      employee_id = employees[0].id;
     }
-    
-    const employee_id = employees[0].id;
 
     // 2. Check if PIN already exists for this employee
     const [existingPins] = await sql.execute(

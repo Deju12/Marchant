@@ -2,6 +2,7 @@ import express from "express";
 import { sql } from "../config/db.js";
 import crypto from "crypto";
 
+
 const router = express.Router();
 
 /**
@@ -30,7 +31,7 @@ router.post("/req_de_otp", async (req, res) => {
     // Generate OTP
     const otp_code = crypto.randomInt(100000, 999999).toString();
     const expires_at = new Date(Date.now() + 3 * 60000); // expires in 3 minutes
-
+  
     // Insert OTP with merchant_id and phone_number
     await sql.execute(
       `INSERT INTO de_otps (merchant_id, phone_number, otp_code, otp_type, expires_at) 
@@ -88,7 +89,7 @@ router.post("/ver_e_otp", async (req, res) => {
       [merchant_id, phone_number]
     );
 
-    if (existing.length == 0) {
+    if (existing.length > 0) {
       return res.status(200).json({
         message: "Employee already Deactivated",
         employee: existing[0],
@@ -102,7 +103,7 @@ router.post("/ver_e_otp", async (req, res) => {
     );
     
     await sql.execute(
-  `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
+  `UPDATE de_otps SET is_used = 1 WHERE otp_code = ?`,
   [otp_code]
 );
 
@@ -139,6 +140,8 @@ router.post("/ver_de_otp", async (req, res) => {
       return res.status(404).json({ message: "OTP not found" });
     }
 
+    // Always mark OTP as use
+
     if (new Date() > new Date(otp.expires_at)) {
       return res.status(400).json({ message: "OTP expired" });
     }
@@ -155,14 +158,8 @@ router.post("/ver_de_otp", async (req, res) => {
       [merchant_id, phone_number]
     );
 
-    // Optionally, mark the OTP as used (if you want)
-    await sql.execute(
-      `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
-      [otp_code]
-    );
-
     res.status(200).json({
-      message: "Employee deactivated (deleted) successfully"
+      message: "Employee deactivated  successfully"
     });
   } catch (err) {
     console.error(err);

@@ -25,16 +25,16 @@ router.post("/merchants", async (req, res) => {
 
 // 2. Add employee
 router.post("/employee", async (req, res) => {
-  const { merchant_id, phone_number, is_active } = req.body;
+  const { merchant_id, phone_number, is_active, name } = req.body;
 
-  if (!merchant_id || !phone_number) {
-    return res.status(400).json({ message: "Merchant ID and phone number are required." });
+  if (!merchant_id || !phone_number || !name) {
+    return res.status(400).json({ message: "Merchant ID, name, and phone number are required." });
   }
 
   try {
     const [result] = await sql.execute(
-      `INSERT INTO employee (merchant_id, phone_number, is_active) VALUES (?, ?, ?)`,
-      [merchant_id, phone_number, is_active ?? true]
+      `INSERT INTO employee (merchant_id, phone_number, is_active, name) VALUES (?, ?, ?, ?)`,
+      [merchant_id, phone_number, is_active ?? true, name]
     );
     res.status(201).json({ message: "employee created", customerId: result.insertId });
   } catch (err) {

@@ -19,7 +19,7 @@ export default function UserScreen() {
       try {
         // Fetch employee
         const response = await fetch(
-          `http://localhost:4000/api/employee/${employeeId}`,
+          `http://localhost:4000/api/employee/id/${employeeId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -36,7 +36,7 @@ export default function UserScreen() {
         // Fetch merchant info
         if (data.merchant_id) {
           const merchantRes = await fetch(
-            `http://localhost:4000/api/merchants/${data.merchant_id}`,
+            `http://localhost:4000/api/merchants/id/${data.merchant_id}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

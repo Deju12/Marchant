@@ -13,10 +13,23 @@ router.get("/merchants", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching merchants", error: err });
   }
 });
-router.get("/merchants/:id", authenticateToken, async (req, res) => {
+router.get("/merchants/id/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await sql.execute("SELECT * FROM merchants WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Merchant not found" });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching merchant", error: err });
+  }
+});
+router.get("/merchants/phone/:phone_number", authenticateToken, async (req, res) => {
+  const { phone_number } = req.params;
+  try {
+    const [rows] = await sql.execute("SELECT * FROM merchants WHERE phone_number = ?;", [phone_number]);
+    
     if (rows.length === 0) {
       return res.status(404).json({ message: "Merchant not found" });
     }
@@ -36,7 +49,7 @@ router.get("/employee", async (req, res) => {
   }
 });
 
-router.get("/employee/:id", authenticateToken, async (req, res) => {
+router.get("/employee/id/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await sql.execute("SELECT * FROM employee WHERE id = ?", [id]);
@@ -46,6 +59,16 @@ router.get("/employee/:id", authenticateToken, async (req, res) => {
     res.status(200).json(rows[0]);
   } catch (err) {
     res.status(500).json({ message: "Error fetching employee", error: err });
+  }
+});
+router.get("/employee/merchant/:merchant_id", authenticateToken, async (req, res) => {
+  const { merchant_id } = req.params;
+  try {
+    const [rows] = await sql.execute("SELECT * FROM employee WHERE merchant_id = ?", [merchant_id]);
+    // Always return an array, even if empty
+    res.status(200).json(rows);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching employees", error: err });
   }
 });
 

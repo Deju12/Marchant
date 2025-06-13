@@ -1,58 +1,63 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 export default function Index() {
   const [form, setForm] = useState({
     phone: "",
+    name: "",
     pincode: "",
     repincode: "",
   });
-  const [countryCode, setCountryCode] = useState("+251");
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("register_phone_number").then((value) => {
+      if (value) setForm((prev) => ({ ...prev, phone: value }));
+    });
+  }, []);
 
   const handleChange = (key: string, value: string) => {
     setForm({ ...form, [key]: value });
   };
 
-  const handlePhoneChange = (text: string) => {
-    const digits = text.replace(/\D/g, "");
-    if (digits.length <= 9) {
-      setForm({ ...form, phone: digits });
-    }
-  };
-
   const handleRegister = async () => {
-    // Clear previous messages
     setSuccessMsg("");
     setErrorMsg("");
 
-    // Front-end validation
     if (!form.phone.trim()) {
       setErrorMsg("Phone Number is required.");
       return;
     }
-
+    if (!form.name.trim()) {
+      setErrorMsg("Name is required.");
+      return;
+    }
     if (!form.pincode.trim()) {
       setErrorMsg("PIN is required.");
       return;
     }
-     if (!form.repincode.trim()) {
-      setErrorMsg("PIN Comfirmation is required.");
+    if (!form.repincode.trim()) {
+      setErrorMsg("PIN Confirmation is required.");
       return;
     }
 
     try {
-      const fullPhone = countryCode + form.phone;
-      const response = await fetch("http://localhost:4000/api/pinset/", {
+      const merchant_id = await AsyncStorage.getItem("register_merchant_id");
+      const phone_number = await AsyncStorage.getItem("register_phone_number");
+
+      const response = await fetch("http://localhost:4000/api/pinset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone_number: fullPhone,
+          merchant_id,
+          phone_number,
+          name: form.name,
           pin_code: form.pincode,
           repin_code: form.repincode,
         }),
@@ -62,17 +67,17 @@ export default function Index() {
 
       if (response.ok) {
         setSuccessMsg("PIN Created successfully!");
-        setForm({ phone: "", pincode: "", repincode: "" }); // clear form
+        setForm({ phone: "", name: "", pincode: "", repincode: "" });
         setTimeout(() => {
           setSuccessMsg("");
-          router.replace("/"); // Redirect to OTP Activation after success
+          router.replace("/");
         }, 1000);
       } else if (
         data.message &&
         (data.message.includes("PIN already set for this employee.") || data.message.includes("Error creating customer"))
       ) {
         setErrorMsg("This phone number is already registered.");
-      }else if (
+      } else if (
         data.message &&
         data.message.includes("Phone number not registered.")
       ) {
@@ -84,7 +89,6 @@ export default function Index() {
       setErrorMsg("Could not connect to the server.");
     }
 
-    // Auto-clear error message after 3 seconds
     setTimeout(() => setErrorMsg(""), 3000);
   };
 
@@ -111,26 +115,24 @@ export default function Index() {
         </Text>
       ) : null}
 
-      {/* Phone number with country code picker */}
-      <View className="flex-row items-center mb-4">
-        <Picker
-          selectedValue={countryCode}
-          style={{ height: 40, width: 100 }}
-          onValueChange={(itemValue) => setCountryCode(itemValue)}
-        >
-          <Picker.Item label="+251 (ET)" value="+251" />
-          {/* Add more countries as needed */}
-        </Picker>
+      {/* Show phone number (read-only) */}
+      <View className="w-72 mb-4">
+        <Text className="text-gray-700 mb-1">Phone Number</Text>
         <TextInput
-          className="border border-green rounded p-3 bg-white flex-1 ml-2"
-          placeholder="911000000"
-          placeholderTextColor="rgba(0,0,0,0.4)"
-          keyboardType="number-pad"
-          maxLength={9}
+          className="border border-green rounded p-3 bg-gray-100"
           value={form.phone}
-          onChangeText={handlePhoneChange}
+          editable={false}
         />
       </View>
+
+      {/* Name input */}
+      <TextInput
+        className="border border-green rounded w-72 p-3 mb-4 bg-white"
+        placeholder="Enter Name"
+        placeholderTextColor="rgba(0,0,0,0.4)"
+        value={form.name}
+        onChangeText={(text) => handleChange("name", text)}
+      />
 
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
@@ -138,6 +140,7 @@ export default function Index() {
         placeholderTextColor="rgba(0,0,0,0.4)"
         value={form.pincode}
         onChangeText={(text) => handleChange("pincode", text)}
+        secureTextEntry
       />
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
@@ -145,14 +148,15 @@ export default function Index() {
         placeholderTextColor="rgba(0,0,0,0.4)"
         value={form.repincode}
         onChangeText={(text) => handleChange("repincode", text)}
+        secureTextEntry
       />
       <TouchableOpacity
         className="bg-green w-72 py-3 rounded mb-4"
         onPress={handleRegister}
       >
-        <Text className="text-center text-white font-bold">Complate</Text>
+        <Text className="text-center text-white font-bold">Complete</Text>
       </TouchableOpacity>
-      
+
       <Link href="/otp" className="text-green font-bold">
         Back
       </Link>

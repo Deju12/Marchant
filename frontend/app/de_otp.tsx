@@ -1,6 +1,7 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useRef, useState, useEffect } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image, Pressable, Modal } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const [otp, setOtp] = useState("");
@@ -9,6 +10,11 @@ export default function Index() {
   const [resendTimer, setResendTimer] = useState(180); // 3 minutes
   const [isResending, setIsResending] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [, setIsMerchant] = useState(false);
+  const [, setFeedbackVisible] = useState(false);
+  const [, setFeedbackMessage] = useState("");
+  const [, setFeedbackType] = useState<"success" | "error">("success");
+  const [, setModalVisible] = useState<boolean | null>(null);
   const inputRef = useRef<TextInput | null>(null);
 
   const params = useLocalSearchParams();
@@ -44,9 +50,39 @@ export default function Index() {
       const data = await response.json();
       if (response.ok) {
         setSuccessMsg("Deactivated successfully!");
-        setTimeout(() => {
+        setTimeout(async () => {
           setSuccessMsg("");
-          router.replace("/");
+          const loginPhone = await AsyncStorage.getItem("phone_number");
+          const token = await AsyncStorage.getItem("token");
+
+          // Fetch all merchants
+          const merchantsRes = await fetch("http://localhost:4000/api/merchants", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          const merchants = await merchantsRes.json();
+
+          // Check if the login phone is in the merchants table
+          const isMerchant = Array.isArray(merchants) &&
+            merchants.some((m) => m.phone_number === loginPhone);
+
+          if (isMerchant) {
+            router.replace({
+              pathname: "/employee_list",
+              params: { refresh: Date.now().toString() },
+            });
+          } else {
+            setModalVisible(null);
+            setIsMerchant(false);
+            setFeedbackVisible(false);
+            setFeedbackMessage("");
+            setFeedbackType("success");
+            await AsyncStorage.clear();
+            router.replace("/");
+            
+          }
         }, 1000);
       } else if (
         data.message &&
@@ -69,7 +105,7 @@ export default function Index() {
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      const response = await fetch("http://localhost:4000/api/req_otp", {
+      const response = await fetch("http://localhost:4000/api/req_de_otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
