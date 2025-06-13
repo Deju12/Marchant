@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Modal, Image } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -11,31 +11,6 @@ export default function SettingsScreen() {
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackType, setFeedbackType] = useState<"success" | "error">("success");
-  const [isMerchant, setIsMerchant] = useState(false);
-
-  useEffect(() => {
-    const checkMerchant = async () => {
-      const phone_number = await AsyncStorage.getItem("phone_number");
-      const token = await AsyncStorage.getItem("token");
-      if (!phone_number || !token) {
-        setIsMerchant(false);
-        return;
-      }
-      try {
-        const res = await fetch(`http://localhost:4000/api/merchants/phone/${phone_number}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        
-        setIsMerchant(res.ok);
-      } catch {
-        setIsMerchant(false);
-      }
-    };
-    checkMerchant();
-  }, []);
 
   const handleDeactivate = async () => {
     setModalVisible(null);
@@ -85,24 +60,18 @@ export default function SettingsScreen() {
 
   const handleLogout = async () => {
     setModalVisible(null);
-    setIsMerchant(false); // Reset merchant state
-    setFeedbackVisible(false);
-    setFeedbackMessage("");
-    setFeedbackType("success");
     await AsyncStorage.clear();
-    // Optionally, force a reload of the app to clear any cached state
     router.replace("/");
- 
   };
 
   return (
     <View className="flex-1 justify-center items-center bg-white">
       <View className="w-80 space-y-4">
-        <Image
-          source={require("../../assets/images/tslogo.webp")}
-          className="w-24 h-24 mb-12"
-          resizeMode="contain"
-        />
+         <Image
+                source={require("../../assets/images/tslogo.webp")}
+                className="w-24 h-24 mb-12"
+                resizeMode="contain"
+              />
         <TouchableOpacity
           className="bg-red-100 border rounded-xl py-1 mb-2 shadow"
           onPress={() => setModalVisible("deactivate")}
@@ -119,17 +88,6 @@ export default function SettingsScreen() {
             Change PIN
           </Text>
         </TouchableOpacity>
-        {/* Employee List Button (only if isMerchant) */}
-        {isMerchant && (
-          <TouchableOpacity
-            className="bg-green-100 border rounded-xl py-1 mb-2 shadow"
-            onPress={() => router.push("/employee_list")}
-          >
-            <Text className="text-green-700 font-bold text-center text-lg">
-              Employee List
-            </Text>
-          </TouchableOpacity>
-        )}
         <TouchableOpacity
           className="bg-gray-100 border rounded-xl py-1 mb-2 shadow"
           onPress={() => setModalVisible("logout")}
@@ -138,7 +96,6 @@ export default function SettingsScreen() {
             Logout
           </Text>
         </TouchableOpacity>
-        
       </View>
 
       {/* Feedback Modal */}

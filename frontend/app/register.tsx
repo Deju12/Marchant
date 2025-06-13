@@ -2,7 +2,6 @@ import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const [form, setForm] = useState({
@@ -61,9 +60,6 @@ export default function Index() {
       if (response.ok) {
         setSuccessMsg("Registered successfully!");
         setForm({ customerId: "", phone: "" }); // clear form
-        // Save phone number and merchant ID for later use (for pinset)
-        await AsyncStorage.setItem("register_phone_number", countryCode + form.phone);
-        await AsyncStorage.setItem("register_merchant_id", form.customerId);
         setTimeout(() => {
           setSuccessMsg("");
           router.replace({
@@ -76,7 +72,7 @@ export default function Index() {
         }, 1000);
       } else if (
         data.message &&
-        (data.message.includes("already registered") || data.message.includes("Failed to send OTP") || data.message.includes("This phone number is already registered."))
+        (data.message.includes("already registered") || data.message.includes("Failed to send OTP") || data.message.includes("Error creating customer"))
       ) {
         setErrorMsg("This phone number is already registered.");
       } else {
@@ -115,7 +111,7 @@ export default function Index() {
 
       <TextInput
         className="border border-green rounded w-72 p-3 mb-4 bg-white"
-        placeholder="Merchant ID"
+        placeholder="Customer ID"
         placeholderTextColor="rgba(0,0,0,0.4)"
         value={form.customerId}
         onChangeText={(text) => handleChange("customerId", text)}

@@ -49,14 +49,6 @@ export default function Login() {
           setSuccessMsg("");
           router.replace("/home");
         }, 1000);
-      } else if (
-        data.message &&
-        (data.message.includes("PIN not set for this employee.") ||
-          data.message.includes("PIN not found for this user"))
-      ) {
-        // Save phone for pinset page and redirect
-        await AsyncStorage.setItem("register_phone_number", fullPhone);
-        router.replace("/pinset");
       } else {
         setErrorMsg(data.message || "Invalid credentials");
       }

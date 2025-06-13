@@ -14,7 +14,6 @@ export async function createTables(db) {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS employee (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
       merchant_id INT,
       phone_number VARCHAR(20) NOT NULL UNIQUE,
       is_active BOOLEAN DEFAULT true,

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
 
 type Transaction = {
   id?: number | string;
@@ -33,11 +32,6 @@ export default function TransactionScreen() {
   const loadTransactions = async (id: string, showLoading = true) => {
     if (showLoading) setLoading(true);
     const token = await AsyncStorage.getItem("token");
-    if (!token) {
-      setTransactions([]);
-      if (showLoading) setLoading(false);
-      return; // Don't fetch if not logged in
-    }
     try {
       const response = await fetch(
         `http://localhost:4000/api/transactions?merchant_id=${id}`,
@@ -48,11 +42,6 @@ export default function TransactionScreen() {
           },
         }
       );
-      if (response.status === 403) {
-        await AsyncStorage.clear();
-        router.replace("/"); // or your login route
-        return;
-      }
       const data = await response.json();
       setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {

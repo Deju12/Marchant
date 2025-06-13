@@ -5,32 +5,24 @@ import crypto from "crypto";
 const router = express.Router();
 
 /**
- 1. Request OTP
+ * 1. Request OTP
  */
 router.post("/req_otp", async (req, res) => {
   const { merchant_id, phone_number } = req.body;
   await sql.execute(
-    `DELETE FROM otps WHERE is_used = 1`
-  );
+  `DELETE FROM otps WHERE is_used = 1`
+);
   if (!merchant_id || !phone_number) {
     return res.status(400).json({ message: "merchant_id and phone_number are required" });
   }
 
   try {
-    // Check if phone number is already registered as an employee for this merchant
-    const [existingEmployees] = await sql.execute(
-      `SELECT id FROM employee WHERE phone_number = ?`,
-      [phone_number]
-    );
-    if (existingEmployees.length > 0) {
-      return res.status(409).json({ message: "This phone number is already registered." });
-    }
-
     // Check merchant exists
     const [merchantRows] = await sql.execute(
       `SELECT phone_number FROM merchants WHERE id = ?`,
       [merchant_id]
     );
+    
     if (merchantRows.length === 0) {
       return res.status(404).json({ message: "Merchant not found" });
     }
@@ -84,17 +76,39 @@ router.post("/ver_otp", async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    // Mark OTP as used
-    await sql.execute(
-      `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
-      [otp_code]
+    const { merchant_id, phone_number } = otp;
+
+    if (!merchant_id || !phone_number) {
+      return res.status(400).json({ message: "Missing merchant_id or phone_number in OTP record" });
+    }
+
+    // Check if employee already exists
+    const [existing] = await sql.execute(
+      `SELECT * FROM employee WHERE merchant_id = ? AND phone_number = ?`,
+      [merchant_id, phone_number]
     );
 
-    // Do NOT add employee here!
-    res.status(200).json({
-      message: "OTP verified successfully",
-      merchant_id: otp.merchant_id,
-      phone_number: otp.phone_number,
+    if (existing.length > 0) {
+      return res.status(200).json({
+        message: "Employee already registered",
+        employee: existing[0],
+      });
+    }
+
+    // Register new employee
+    const [insertResult] = await sql.execute(
+      `INSERT INTO employee (merchant_id, phone_number) VALUES (?, ?)`,
+      [merchant_id, phone_number]
+    );
+    
+    await sql.execute(
+  `UPDATE otps SET is_used = 1 WHERE otp_code = ?`,
+  [otp_code]
+);
+
+    res.status(201).json({
+      message: "OTP verified and employee registered",
+      employee_id: insertResult.insertId,
     });
   } catch (err) {
     console.error(err);
